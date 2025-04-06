@@ -1,7 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-
-
+import React, { useState } from "react";
 
 function MainComponent() {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -24,14 +22,15 @@ function MainComponent() {
     setError("");
 
     try {
-      const response = await fetch("/makeUser", {
+      const response = await fetch("http://localhost:4000/makeUser", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: phoneNumber.replace(/\D/g, "") }),
+        body: JSON.stringify({ phone: phoneNumber.replace(/\D/g, "") }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || "Failed to submit phone number");
       }
 
