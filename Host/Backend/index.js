@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
+const twilio = require('twilio');
+
 
 const app = express();
 const port = 4000;
@@ -36,19 +38,26 @@ app.get('/getUsers', async (req, res) => {
 
 });
 
-
 // Endpoint to send SMS
 app.post('/sendMessage', async (req, res) => {
-  const { to, message } = req.body;
+  const { phoneNumbers, message, companyName } = req.body;
 
   try {
-    const result = await client.messages.create({
-      body: message,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: to,
-    });
+    const results = await Promise.all(
+      phoneNumbers.map(async (phoneNumber) => {
+        const formattedMessage = `Message from ${companyName}: ${message}`;
+        return client.messages.create({
+          body: formattedMessage,
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: phoneNumber,
+        });
+      })
+    );
 
-    res.json({ success: true, sid: result.sid });
+    res.json({ 
+      success: true, 
+      results: results.map(result => result.sid)
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: err.message });
